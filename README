@@ -1,0 +1,18 @@
+This module implements the Knuth-Morris-Pratt algorithm.
+It can search a word in a text in O(m+n) time, where m and n are the length of the word and the text.
+
+This module can apply on any list of instance of Eq.
+
+Donald Knuth; James H. Morris, Jr, Vaughan Pratt (1977).
+Fast pattern matching in strings.
+SIAM Journal on Computing 6 (2): 323–350. doi:10.1137/0206024
+
+Sample usage:
+
+> let
+>   word = "abababcaba"
+>   text = "abababababcabababcababbb"
+>   kmpTable = build word
+>   result = match kmpTable text
+>   -- the 'result' should be [4, 11]
+
