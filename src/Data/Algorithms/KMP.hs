@@ -5,17 +5,17 @@
 --
 -- Donald Knuth; James H. Morris, Jr, Vaughan Pratt (1977).
 -- Fast pattern matching in strings.
--- SIAM Journal on Computing 6 (2): 323–350. doi:10.1137/0206024
+-- SIAM Journal on Computing 6 (2): 323-350. doi:10.1137/0206024
 --
 -- Sample usage:
 --
 -- @
 --  let
---    word = "abababcaba"
---    text = "abababababcabababcababbb"
+--    word = \"abababcaba\"
+--    text = \"abababababcabababcababbb\"
 --    kmpTable = build word
 --    result = match kmpTable text
---    -- the 'result' should be [4, 11]
+--    -- the result should be [4, 11]
 -- @
 --
 module Data.Algorithms.KMP
