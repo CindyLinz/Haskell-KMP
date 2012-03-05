@@ -47,21 +47,37 @@ build pattern =
 
     resTable = Table
       { alphabetTable = listArray (0,len-1) pattern
-      , jumpTable = listArray (0,len-1) $ -1 : map genJump [1..]
+      , jumpTable = listArray (-1,len-1) $ (-2) : genJump (-1) 0
       }
 
-    genJump i =
+    genJump _ 0 =
+      let
+        o = if 1 == len || alphabetTable resTable ! 0 /= alphabetTable resTable ! 1
+          then -1
+          else -2
+
+        later = genJump (-1) 1
+      in
+        o : later
+
+    genJump lastMPJump i =
       let
         ch = alphabetTable resTable ! i
 
         findJ j
-          | alphabetTable resTable ! (j + 1) == ch = j
-          | j == (-1) = -2
+          | j == -2 = -2
+          | alphabetTable resTable ! (j+1) == ch = j
+          | j == -1 = -2
           | otherwise = findJ (jumpTable resTable ! j)
 
-        j = findJ ( jumpTable resTable ! (i-1) )
-      in
-        j + 1
+        j = findJ lastMPJump
+
+        o = if i+1 == len || alphabetTable resTable ! (i+1) /= alphabetTable resTable ! (j+2)
+          then j+1
+          else jumpTable resTable ! (j+1)
+
+        later = genJump (j+1) (i+1)
+      in o : later
 
   in
     resTable
@@ -81,9 +97,8 @@ match table str =
           (s:ss) ->
             let
               (i', j', str')
-                | j < len && s == alphabetTable table ! j = (i + 1, j + 1, ss)
-                | j > 0 = (i, 1 + (jumpTable table ! (j - 1)), str)
-                | otherwise = (i + 1, 0, ss)
+                | j < 0 || j < len && s == alphabetTable table ! j = (i + 1, j + 1, ss)
+                | otherwise = (i, 1 + (jumpTable table ! (j - 1)), str)
             in
               go i' j' str'
           _ -> []
@@ -93,4 +108,3 @@ match table str =
           else later
   in
     go 0 0 str
-
