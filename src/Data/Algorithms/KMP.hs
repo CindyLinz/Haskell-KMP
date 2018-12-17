@@ -20,7 +20,9 @@
 --
 module Data.Algorithms.KMP
   ( Table
+  , MatchState
   , build
+  , matchSingle
   , match
   ) where
 
@@ -35,7 +37,10 @@ import Data.Array
 data Table a = Table
   { alphabetTable :: Array Int a
   , jumpTable :: Array Int Int
+  , len :: Int
   }
+
+type MatchState = Int
 
 -- |The 'build' function eats a pattern (list of some Eq) and generates a KMP table.
 --
@@ -48,6 +53,7 @@ build pattern =
     resTable = Table
       { alphabetTable = listArray (0,len-1) pattern
       , jumpTable = listArray (-1,len-1) $ (-2) : genJump (-1) 0
+      , len = len
       }
 
     genJump _ 0 =
@@ -82,29 +88,26 @@ build pattern =
   in
     resTable
 
+-- |The 'matchSingle' function takes the KMP table, the current state of the matching and the next
+-- element in the sequence and returns whether it finished a matching sequence along with the new
+-- state. This is useful if your input doesn't come in a list or you need other flexibilities.
+--
+-- The matching state is just an integer representing how long of a pattern prefix has been
+-- matched already. Therefore the initial state should be 0 if you start with an empty sequence.
+matchSingle :: Eq a => Table a -> MatchState -> a -> (Bool, MatchState)
+matchSingle table j s
+  | j < 0 || j < len table && s == alphabetTable table ! j = (j + 1 == len table, j + 1)
+  | otherwise = matchSingle table (1 + (jumpTable table ! (j - 1))) s
+
+
 -- |The 'match' function takes the KMP table and a list to be searched (might be infinite)
 -- and then generates the search results as a list of every matched begining (might be infinite).
 --
 -- The time complexity is O(length of the pattern + length of the searched list)
 match :: Eq a => Table a -> [a] -> [Int]
-match table str =
-  let
-    len = 1 + snd ( bounds (alphabetTable table) )
-
-    go i j str =
-      let
-        later = case str of
-          (s:ss) ->
-            let
-              (i', j', str')
-                | j < 0 || j < len && s == alphabetTable table ! j = (i + 1, j + 1, ss)
-                | otherwise = (i, 1 + (jumpTable table ! (j - 1)), str)
-            in
-              go i' j' str'
-          _ -> []
-      in
-        if j == len
-          then i-len : later
-          else later
-  in
-    go 0 0 str
+match table str = [ 0 | len table == 0 ] ++ go (1 - len table) 0 str
+  where
+    go i j [] = []
+    go i j (s:ss) = case matchSingle table j s of
+      (False, j') -> go (i + 1) j' ss
+      (True, j')  -> i : go (i + 1) j' ss
